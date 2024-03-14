@@ -1,0 +1,39 @@
+{
+  "name": "framjet-logger",
+  "$schema": "node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/rollup:rollup",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/framjet-logger",
+        "main": "./src/index.ts",
+        "format": ["esm", "cjs"],
+        "compiler": "tsc",
+        "importPath": "@framjet/logger",
+        "tsConfig": "./tsconfig.lib.json",
+        "additionalEntryPoints": ["./src/all.ts"],
+        "generateExportsField": true,
+        "assets": [
+          {  "glob": "README.md", "input": ".", "output": "." },
+          {  "glob": "LICENSE", "input": ".", "output": "." }
+        ]
+      }
+    },
+    "lint": {
+      "command": "eslint ./src ./package.json"
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "reportsDirectory": "coverage/framjet-logger"
+      }
+    }
+  },
+  "tags": []
+}
