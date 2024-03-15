@@ -83,13 +83,6 @@ export interface FramJetLoggerOptions {
   setAll: (matcher?: string | RegExp) => void;
 }
 
-declare global {
-  // noinspection JSUnusedGlobalSymbols
-  interface Window {
-    FramJetLogger: FramJetLoggerOptions;
-  }
-}
-
 export function createLoggerOptions(): FramJetLoggerOptions {
   let globalLevel = Level.FINE;
   const nameLevelMap = new Map<string, FramJetLoggerLevel>();
@@ -207,7 +200,7 @@ export function createLoggerApi(
 
   return {
     isEnabled(): boolean {
-      return loggerLevel.value >= window.FramJetLogger.getLevel(name).value;
+      return loggerLevel.value >= globalThis.FramJetLogger.getLevel(name).value;
     },
     log(format: string, ...args: unknown[]): void {
       if (this.isEnabled()) {

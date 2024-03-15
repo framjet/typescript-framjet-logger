@@ -1,6 +1,11 @@
 // noinspection JSUnusedGlobalSymbols
 
-import { createLoggerApi, FramJetLogger, FramJetLoggerApi } from './logger';
+import {
+  createLoggerApi,
+  FramJetLogger,
+  FramJetLoggerApi,
+  FramJetLoggerOptions,
+} from './logger';
 import { getSourceFileName } from './utils';
 import { FramJetLoggerLevel, Level as _Level } from './level';
 
@@ -41,6 +46,16 @@ export function createLogger(name: string): FramJetLogger {
 
 export function forEnclosingFile(): FramJetLogger {
   return createLogger(getSourceFileName());
+}
+
+export function getOptions(): FramJetLoggerOptions {
+  const options = globalThis.FramJetLogger;
+
+  if (options === undefined) {
+    throw new Error('FramJetLogger options are not defined');
+  }
+
+  return options;
 }
 
 export const Level = _Level;
