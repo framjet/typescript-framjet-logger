@@ -53,9 +53,11 @@ export interface FramJetLoggerApi {
     ...args: unknown[]
   ): <T>(execution: (log: FramJetLoggerApi) => T) => T;
 
-  trackExecutionFunction<F extends (...args: I) => O, I extends never[], O>(
+  trackExecutionFunction<F extends (...args: never) => unknown>(
     func: F,
-  ): (labelCreator: (...args: I) => [string, unknown[]] | string) => F;
+  ): (
+    labelCreator: (...args: Parameters<F>) => [string, unknown[]] | string,
+  ) => F;
 }
 
 export interface FramJetLogger {
@@ -377,7 +379,7 @@ export function createLoggerApi(
       label: string,
       ...args: unknown[]
     ): <T>(execution: (log: FramJetLoggerApi) => T) => T {
-      return <T>(execution: (log: FramJetLoggerApi) => T): T => {
+      return function (execution) {
         if (!api.isEnabled()) {
           return execution(api);
         }
@@ -393,13 +395,13 @@ export function createLoggerApi(
         }
       };
     },
-    trackExecutionFunction<F extends (...args: I) => O, I extends never[], O>(
+    trackExecutionFunction<F extends (...args: never) => unknown>(
       func: F,
-    ): (labelCreator: (...args: I) => [string, unknown[]] | string) => F {
-      return function (
-        labelCreator: (...args: I) => [string, unknown[]] | string,
-      ): F {
-        return function (...args: I): O {
+    ): (
+      labelCreator: (...args: Parameters<F>) => [string, unknown[]] | string,
+    ) => F {
+      return function (labelCreator) {
+        return function (...args) {
           if (!api.isEnabled()) {
             return func(...args);
           }
