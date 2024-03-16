@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { FramJetLoggerLevel, Level } from './level';
-import { msgFormat, randomString } from './utils';
+import { formatPerformanceTime, msgFormat } from './utils';
 import { mapLogLevel } from './console';
 
 export interface FramJetTimedApi {
@@ -26,7 +26,7 @@ export interface FramJetLoggerApi {
 
   log(...args: unknown[]): void;
 
-  timed(label: string): FramJetTimedApi;
+  timed(label?: string, ...args: unknown[]): FramJetTimedApi;
 
   assert(condition: boolean, format: string, ...args: unknown[]): void;
 
@@ -224,7 +224,7 @@ export function createLoggerApi(
         }
       }
     },
-    timed(label: string): FramJetTimedApi {
+    timed(label = 'Timed', ...args: unknown[]): FramJetTimedApi {
       if (!api.isEnabled()) {
         return {
           end() {
@@ -236,20 +236,31 @@ export function createLoggerApi(
         };
       }
 
-      const [content] = formatText(`[${randomString(6)}] ${label ?? 'Timed'}`);
-
-      console.time(content);
+      const startTime = performance.now();
 
       return {
         end() {
-          console.timeEnd(content);
+          api.log(
+            `${label}: ${formatPerformanceTime(performance.now() - startTime)}`,
+            ...args,
+          );
         },
         log(...data: unknown[]): void {
           if (api.isEnabled()) {
             if (data.length > 0) {
-              console.timeLog(content, ...data);
+              api.log(
+                `${label}: ${formatPerformanceTime(
+                  performance.now() - startTime,
+                )}`,
+                ...[...args, ...data],
+              );
             } else {
-              console.timeLog(content);
+              api.log(
+                `${label}: ${formatPerformanceTime(
+                  performance.now() - startTime,
+                )}`,
+                ...args,
+              );
             }
           }
         },

@@ -62,24 +62,10 @@ export function msgFormat(
   return ['' + fmt, args];
 }
 
-interface Options {
-  prefix?: string;
-  suffix?: string;
-  characters?: string;
-}
-
-export function randomString(
-  length = 6,
-  {
-    prefix = '',
-    suffix = '',
-    characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
-  }: Options = {},
-) {
-  let result = prefix;
-  const charactersLength = characters.length;
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+export function formatPerformanceTime(time: number) {
+  if (time > 3) {
+    return `${Math.round(time * 1000) / 1000}ms`;
+  } else {
+    return `${Math.round(time * 100000) / 100}µs`;
   }
-  return `${result}${suffix}`;
 }

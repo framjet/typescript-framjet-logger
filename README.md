@@ -106,7 +106,7 @@ The `FramJetLoggerApi` interface provides the following methods:
 
 - `isEnabled(): boolean`: Returns `true` if the logger is enabled for the current log level.
 - `log(...args: unknown[]): void`: Logs a message with the specified arguments.
-- `timed(label: string): FramJetTimedApi`: Starts a new timed operation with the specified label.
+- `timed(label?: string, ...args: unknown[]): FramJetTimedApi`: Starts a new timed operation with the specified label.
 - `assert(condition: boolean, format: string, ...args: unknown[]): void`: Asserts that the provided condition is truthy
   and logs the message if the condition is falsy.
 - `assert(condition: boolean, ...args: unknown[]): void`: Asserts that the provided condition is truthy and logs the

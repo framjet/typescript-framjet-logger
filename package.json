@@ -1,7 +1,7 @@
 {
   "name": "@framjet/logger",
   "description": "A lightweight, configurable logger used by FramJet projects, providing flexible logging levels and formatting options.",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "license": "MIT",
   "author": "Aurimas Niekis <aurimas@niekis.lt>",
   "homepage": "https://github.com/framjet/typescript-framjet-logger#readme",
