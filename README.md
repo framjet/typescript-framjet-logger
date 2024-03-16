@@ -96,6 +96,7 @@ The `FramJetLogger` interface provides the following methods:
 - `atTrace(): FramJetLoggerApi`: Returns a `FramJetLoggerApi` instance for the `ALL` log level.
 - `atDebugLow(): FramJetLoggerApi`: Returns a `FramJetLoggerApi` instance for the `FINEST` log level.
 - `atDebug(): FramJetLoggerApi`: Returns a `FramJetLoggerApi` instance for the `FINE` log level.
+- `atInfo(): FramJetLoggerApi`: Returns a `FramJetLoggerApi` instance for the `INFO` log level.
 - `atWarn(): FramJetLoggerApi`: Returns a `FramJetLoggerApi` instance for the `WARNING` log level.
 - `atError(): FramJetLoggerApi`: Returns a `FramJetLoggerApi` instance for the `SEVERE` log level.
 
@@ -119,6 +120,8 @@ The `FramJetLoggerApi` interface provides the following methods:
   label.
 - `table(data: unknown, columns?: string[]): void`: Logs the specified data as a table.
 - `trace(...args: unknown[]): void`: Logs a stack trace with the specified arguments.
+- `trackExecution(label: string, ...args: unknown[]): <T>(execution: (log: FramJetLoggerApi) => T) => T`: Wraps a code block with a labeled group and measures its execution time. The label and additional args are used to describe the group. The method returns a function that takes an execution function as an argument. The execution function is called with a log parameter that can be used for logging within the code block. The group and timed operation are automatically ended after the execution function completes.
+- `trackExecutionFunction<F extends (...args: I) => O, I extends unknown[], O>(func: F): (labelCreator: (...args: I) => [string, unknown[]] | string) => F`: Wraps a function with a labeled group and measures its execution time. The func parameter is the function to be wrapped. The method returns a function that takes a labelCreator function as an argument. The labelCreator function is used to generate the label and additional arguments for the group based on the arguments passed to the wrapped function. The wrapped function is called within a group and timed operation, which are automatically ended after the function completes.
 
 ### `FramJetLoggerOptions`
 

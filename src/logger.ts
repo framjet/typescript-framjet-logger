@@ -2,8 +2,6 @@
 import { FramJetLoggerLevel, Level } from './level';
 import { msgFormat } from './utils';
 import { mapLogLevel } from './console';
-import * as console from 'console';
-import { InspectOptions } from 'node:util';
 
 export interface FramJetTimedApi {
   end(): void;
@@ -38,7 +36,7 @@ export interface FramJetLoggerApi {
 
   count(label?: string): FramJetCountApi;
 
-  dir(obj: unknown, options?: InspectOptions): void;
+  dir(obj: unknown, options?: object): void;
 
   dirxml(...obj: unknown[]): void;
 
@@ -49,6 +47,15 @@ export interface FramJetLoggerApi {
   table(data: unknown, columns?: string[]): void;
 
   trace(...args: unknown[]): void;
+
+  trackExecution(
+    label: string,
+    ...args: unknown[]
+  ): <T>(execution: (log: FramJetLoggerApi) => T) => T;
+
+  trackExecutionFunction<F extends (...args: I) => O, I extends unknown[], O>(
+    func: F,
+  ): (labelCreator: (...args: I) => [string, unknown[]] | string) => F;
 }
 
 export interface FramJetLogger {
@@ -63,6 +70,8 @@ export interface FramJetLogger {
   atDebugLow(): FramJetLoggerApi;
 
   atDebug(): FramJetLoggerApi;
+
+  atInfo(): FramJetLoggerApi;
 
   atWarn(): FramJetLoggerApi;
 
@@ -198,19 +207,23 @@ export function createLoggerApi(
     return [content, colorArgs.concat(leftArgs)];
   };
 
-  return {
+  const api: FramJetLoggerApi = {
     isEnabled(): boolean {
       return loggerLevel.value >= globalThis.FramJetLogger.getLevel(name).value;
     },
     log(format: string, ...args: unknown[]): void {
-      if (this.isEnabled()) {
+      if (api.isEnabled()) {
         const [content, leftArgs] = formatText(format, ...args);
 
-        mapLogLevel(loggerLevel)(content, ...leftArgs);
+        if (leftArgs !== undefined && leftArgs.length > 0) {
+          mapLogLevel(loggerLevel)(content, ...leftArgs);
+        } else {
+          mapLogLevel(loggerLevel)(content);
+        }
       }
     },
     timed(label: string): FramJetTimedApi {
-      if (!this.isEnabled()) {
+      if (!api.isEnabled()) {
         return {
           end() {
             // noop
@@ -230,32 +243,44 @@ export function createLoggerApi(
           console.timeEnd(content);
         },
         log(...data: unknown[]): void {
-          if (this.isEnabled()) {
-            console.timeLog(content, ...data);
+          if (api.isEnabled()) {
+            if (data.length > 0) {
+              console.timeLog(content, ...data);
+            } else {
+              console.timeLog(content);
+            }
           }
         },
       };
     },
     assert(condition: boolean, ...args: unknown[]): void {
-      if (this.isEnabled()) {
+      if (api.isEnabled()) {
         if (args.length > 0 && typeof args[0] === 'string') {
           const [content, leftArgs] = formatText(args[0], ...args.slice(1));
 
-          console.assert(condition, content, ...leftArgs);
+          if (leftArgs !== undefined && leftArgs.length > 0) {
+            console.assert(condition, content, ...leftArgs);
+          } else {
+            console.assert(condition, content);
+          }
 
           return;
         }
 
-        console.assert(condition, ...args);
+        if (args.length > 0) {
+          console.assert(condition, ...args);
+        } else {
+          console.assert(condition);
+        }
       }
     },
     clear(): void {
-      if (this.isEnabled()) {
+      if (api.isEnabled()) {
         console.clear();
       }
     },
     count(label?: string): FramJetCountApi {
-      if (!this.isEnabled()) {
+      if (!api.isEnabled()) {
         return {
           reset() {
             // noop
@@ -284,24 +309,28 @@ export function createLoggerApi(
         },
       };
     },
-    dir(obj: unknown, options?: InspectOptions): void {
-      if (this.isEnabled()) {
+    dir(obj: unknown, options?: object): void {
+      if (api.isEnabled()) {
         console.dir(obj, options);
       }
     },
     dirxml(...obj: unknown[]): void {
-      if (this.isEnabled()) {
+      if (api.isEnabled()) {
         console.dirxml(...obj);
       }
     },
     group(label?: string, ...args: unknown[]): FramJetGroupApi {
-      const [content, ...rest] =
+      const [content, rest] =
         label !== undefined ? formatText(label, ...args) : [undefined, []];
 
-      console.group(content, ...rest);
+      if (rest !== undefined && rest.length > 0) {
+        console.group(content, ...rest);
+      } else {
+        console.group(content);
+      }
 
       return {
-        ...this,
+        ...api,
         getLabel() {
           return label;
         },
@@ -311,13 +340,17 @@ export function createLoggerApi(
       };
     },
     groupCollapsed(label?: string, ...args: unknown[]): FramJetGroupApi {
-      const [content, ...rest] =
+      const [content, rest] =
         label !== undefined ? formatText(label, ...args) : [undefined, []];
 
-      console.groupCollapsed(content, ...rest);
+      if (rest !== undefined && rest.length > 0) {
+        console.groupCollapsed(content, ...rest);
+      } else {
+        console.groupCollapsed(content);
+      }
 
       return {
-        ...this,
+        ...api,
         getLabel() {
           return label;
         },
@@ -327,14 +360,70 @@ export function createLoggerApi(
       };
     },
     table(data: unknown, columns?: string[]): void {
-      if (this.isEnabled()) {
+      if (api.isEnabled()) {
         console.table(data, columns);
       }
     },
     trace(...args: unknown[]): void {
-      if (this.isEnabled()) {
-        console.trace(...args);
+      if (api.isEnabled()) {
+        if (args.length > 0) {
+          console.trace(...args);
+        } else {
+          console.trace();
+        }
       }
     },
+    trackExecution(
+      label: string,
+      ...args: unknown[]
+    ): <T>(execution: (log: FramJetLoggerApi) => T) => T {
+      return <T>(execution: (log: FramJetLoggerApi) => T): T => {
+        const log = api.groupCollapsed(label, ...args);
+        const timed = log.timed('Execution time');
+
+        try {
+          return execution(log);
+        } finally {
+          timed.end();
+          log.end();
+        }
+      };
+    },
+    trackExecutionFunction<F extends (...args: I) => O, I extends unknown[], O>(
+      func: F,
+    ): (labelCreator: (...args: I) => [string, unknown[]] | string) => F {
+      return function (
+        labelCreator: (...args: I) => [string, unknown[]] | string,
+      ): F {
+        return function (...args: I): O {
+          const labelResult = labelCreator(...args);
+          let label: string;
+          let labelArgs: unknown[] | undefined;
+          if (Array.isArray(labelResult)) {
+            [label, labelArgs] = labelResult;
+          } else {
+            label = labelResult;
+          }
+
+          let log: FramJetGroupApi;
+          if (labelArgs !== undefined) {
+            log = api.groupCollapsed(label, ...labelArgs);
+          } else {
+            log = api.groupCollapsed(label);
+          }
+
+          const timed = log.timed('Execution time');
+
+          try {
+            return func(...args);
+          } finally {
+            timed.end();
+            log.end();
+          }
+        } as F;
+      };
+    },
   };
+
+  return api;
 }

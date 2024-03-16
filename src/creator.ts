@@ -35,6 +35,9 @@ export function createLogger(name: string): FramJetLogger {
     atDebug(): FramJetLoggerApi {
       return this.at(_Level.FINE);
     },
+    atInfo(): FramJetLoggerApi {
+      return this.at(_Level.INFO);
+    },
     atWarn(): FramJetLoggerApi {
       return this.at(_Level.WARNING);
     },
