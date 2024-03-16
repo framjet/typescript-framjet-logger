@@ -149,6 +149,8 @@ export function createLoggerOptions(): FramJetLoggerOptions {
 
       if (matcher instanceof RegExp) {
         regexLevelMap.set(matcher, level);
+
+        return;
       }
 
       throw new Error(`Invalid matcher type "${typeof matcher}"`);
