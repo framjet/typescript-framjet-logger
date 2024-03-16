@@ -53,7 +53,7 @@ export interface FramJetLoggerApi {
     ...args: unknown[]
   ): <T>(execution: (log: FramJetLoggerApi) => T) => T;
 
-  trackExecutionFunction<F extends (...args: I) => O, I extends any[], O>(
+  trackExecutionFunction<F extends (...args: I) => O, I extends never[], O>(
     func: F,
   ): (labelCreator: (...args: I) => [string, unknown[]] | string) => F;
 }
@@ -378,6 +378,10 @@ export function createLoggerApi(
       ...args: unknown[]
     ): <T>(execution: (log: FramJetLoggerApi) => T) => T {
       return <T>(execution: (log: FramJetLoggerApi) => T): T => {
+        if (!api.isEnabled()) {
+          return execution(api);
+        }
+
         const log = api.groupCollapsed(label, ...args);
         const timed = log.timed('Execution time');
 
@@ -389,13 +393,17 @@ export function createLoggerApi(
         }
       };
     },
-    trackExecutionFunction<F extends (...args: I) => O, I extends any[], O>(
+    trackExecutionFunction<F extends (...args: I) => O, I extends never[], O>(
       func: F,
     ): (labelCreator: (...args: I) => [string, unknown[]] | string) => F {
       return function (
         labelCreator: (...args: I) => [string, unknown[]] | string,
       ): F {
         return function (...args: I): O {
+          if (!api.isEnabled()) {
+            return func(...args);
+          }
+
           const labelResult = labelCreator(...args);
           let label: string;
           let labelArgs: unknown[] | undefined;
