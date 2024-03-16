@@ -378,6 +378,10 @@ export function createLoggerApi(
       ...args: unknown[]
     ): <T>(execution: (log: FramJetLoggerApi) => T) => T {
       return <T>(execution: (log: FramJetLoggerApi) => T): T => {
+        if (!api.isEnabled()) {
+          return execution(api);
+        }
+
         const log = api.groupCollapsed(label, ...args);
         const timed = log.timed('Execution time');
 
@@ -396,6 +400,10 @@ export function createLoggerApi(
         labelCreator: (...args: I) => [string, unknown[]] | string,
       ): F {
         return function (...args: I): O {
+          if (!api.isEnabled()) {
+            return func(...args);
+          }
+
           const labelResult = labelCreator(...args);
           let label: string;
           let labelArgs: unknown[] | undefined;
