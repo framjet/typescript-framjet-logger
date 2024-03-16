@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { FramJetLoggerLevel, Level } from './level';
-import { msgFormat } from './utils';
+import { msgFormat, randomString } from './utils';
 import { mapLogLevel } from './console';
 
 export interface FramJetTimedApi {
@@ -236,7 +236,7 @@ export function createLoggerApi(
         };
       }
 
-      const [content] = formatText(label);
+      const [content] = formatText(`[${randomString(6)}] ${label ?? 'Timed'}`);
 
       console.time(content);
 
