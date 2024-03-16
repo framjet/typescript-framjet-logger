@@ -53,7 +53,7 @@ export interface FramJetLoggerApi {
     ...args: unknown[]
   ): <T>(execution: (log: FramJetLoggerApi) => T) => T;
 
-  trackExecutionFunction<F extends (...args: I) => O, I extends unknown[], O>(
+  trackExecutionFunction<F extends (...args: I) => O, I extends any[], O>(
     func: F,
   ): (labelCreator: (...args: I) => [string, unknown[]] | string) => F;
 }
@@ -389,7 +389,7 @@ export function createLoggerApi(
         }
       };
     },
-    trackExecutionFunction<F extends (...args: I) => O, I extends unknown[], O>(
+    trackExecutionFunction<F extends (...args: I) => O, I extends any[], O>(
       func: F,
     ): (labelCreator: (...args: I) => [string, unknown[]] | string) => F {
       return function (
